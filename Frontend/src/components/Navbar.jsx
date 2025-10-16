@@ -12,7 +12,7 @@ function Navbar() {
                     <span className='text-black' >Pass</span><span className='text-green-300'>OP</span>
                     <span className='text-green-600'>/ &gt;</span>
                 </li>
-                <div className='flex gap-10'>
+                <div className='flex gap-10 w-36'>
                     <li>
                         <a href="https://github.com/" target='new'><Github /></a>
                     </li>

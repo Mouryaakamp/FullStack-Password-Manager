@@ -1,9 +1,15 @@
 import React, { useState } from 'react'
 import eyeIcon from '/eye-svgrepo-com.svg';
 import eyeSlashIcon from '/eye-slash-svgrepo-com.svg';
+import { Copy, Edit2, Trash } from 'lucide-react';
+import { ToastContainer, toast } from 'react-toastify';
 
 function Manager() {
     const [passwordArray, setPasswordArray] = useState([])
+    const [Eye, setEye] = useState(false)
+    const [Form, setForm] = useState({ site: "", username: "", password: "" })
+
+
     useState(() => {
         let passwords = localStorage.getItem("passwords")
         if (passwords) {
@@ -11,15 +17,28 @@ function Manager() {
         }
 
     }, [])
-    const [Eye, setEye] = useState(false)
-    const [Form, setForm] = useState({ site: "", username: "", password: "" })
 
 
+    const copytext = (text) => {
+        toast.success('Copied to Clipboard', {
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: false,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            theme: "colored",
+
+        });
+
+        navigator.clipboard.writeText(text)
+    }
     const savePassword = () => {
 
         setPasswordArray([...passwordArray, Form])
-        localStorage.setItem("passwordArray", JSON.stringify([...passwordArray, Form]))
-        console.log(passwordArray)
+        localStorage.setItem("passwords", JSON.stringify([...passwordArray, Form]))
+        console.log([...passwordArray, Form])
 
     }
 
@@ -32,8 +51,19 @@ function Manager() {
 
     return (
         <>
-
-            <div class="absolute inset-0 -z-10 h-full w-full bg-white [background:radial-gradient(125%_125%_at_50%_10%,#fff_40%,#63e_100%)]">
+            <ToastContainer
+                position="top-right"
+                autoClose={5000}
+                hideProgressBar={false}
+                newestOnTop={false}
+                closeOnClick={false}
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+                theme="colored"
+            />
+            <div className="absolute inset-0 -z-10 h-full w-full bg-white [background:radial-gradient(125%_125%_at_50%_10%,#fff_40%,#63e_100%)]">
             </div>
 
 
@@ -60,7 +90,7 @@ function Manager() {
                         </span>
                     </div>
                     <div className='flex gap-3 '>
-                        <div className='relative w-1/2'>
+                        <div className='relative w-2/3'>
                             <input className='bg-purple-100 border-2 border-purple-300 rounded-2xl py-1 px-2 w-full' value={Form.username} onChange={handlechange} placeholder='Add Username ' type="text" name='username' />
                             <span className="absolute right-2 top-1/2 transform -translate-y-1/2 cursor-pointer ">
                                 <img
@@ -70,7 +100,7 @@ function Manager() {
                                 />
                             </span>
                         </div>
-                        <div className='relative w-1/2'>
+                        <div className='relative w-1/3'>
                             <input className='bg-purple-100 border-2 border-purple-300 rounded-2xl py-1 px-2 w-full' value={Form.password} onChange={handlechange} placeholder='Add Password ' type={Eye ? 'Test' : 'password'} name='password' />
                             <span className="absolute right-2 top-1/2 transform -translate-y-1/2 cursor-pointer">
                                 <img onClick={() => setEye(!Eye)}
@@ -105,15 +135,37 @@ function Manager() {
                             <th className='py-3'>Site Link</th>
                             <th className='py-3'>Username</th>
                             <th className='py-3'>Password</th>
+                            <th className='py-3'>Actions</th>
                         </tr>
                     </thead>
                     <tbody className='bg-purple-100'>
                         {passwordArray.map((item, index) => (
 
                             <tr key={index}>
-                                <td className=' py-2 border border-white text-center w-32 ' ><a target="_blank" href={item.site} >{item.site} </a></td>
-                                <td className=' py-2 border border-white text-center w-32 '>{item.username}</td>
-                                <td className=' py-2 border border-white text-center w-32 '>{item.password}</td>
+                                <td className=' py-2 border border-white text-center w-32 ' >
+                                    <div className='flex justify-center items-center space-x-2'>
+                                        <a target="_blank" href={item.site} >{item.site} </a>
+                                        <Copy onClick={() => { copytext(item.site) }} className="w-4 h-4 opacity-70 hover:opacity-100 cursor-pointer" />
+                                    </div>
+                                </td>
+                                <td className=' py-2 border border-white text-center w-32 '>
+                                    <div className='flex justify-center items-center space-x-3'>
+                                        {item.username}
+                                        <Copy onClick={() => { copytext(item.username) }} className="w-4 m-2 h-4 opacity-70 hover:opacity-100 cursor-pointer" />
+                                    </div>
+                                </td>
+                                <td className=' py-2 border border-white text-center w-32 '>
+                                    <div className='flex justify-center items-center space-x-3'>
+                                        {item.password}
+                                        <Copy onClick={() => { copytext(item.password) }} className="w-4 h-4 m-2 opacity-70 hover:opacity-100 cursor-pointer" />
+                                    </div>
+                                </td>
+                                <td className=' py-2 border border-white text-center w-32 '>
+                                    <div className='flex justify-center items-center gap-5'>                               
+                                        <Edit2 className="w-4 h-4 opacity-70 hover:opacity-100 cursor-pointer" />
+                                        < Trash className="w-4 h-4  opacity-70 hover:opacity-100 cursor-pointer" />
+                                    </div>
+                                </td>
                             </tr>
                         ))}
                     </tbody>

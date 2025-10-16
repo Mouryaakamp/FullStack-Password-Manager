@@ -4,14 +4,18 @@ import viteLogo from '/vite.svg'
 import './App.css'
 import Navbar from './components/Navbar'
 import Manager from './components/Manager'
+import Footer from './components/Footer'
 
 function App() {
 
   return (
     <>
         <Navbar/>
-        <Manager/>
-      
+        <div className='min-h-[80vh]'>
+          <Manager/>
+        </div>
+        
+      <Footer/>
     </>
   )
 }
