@@ -3,6 +3,8 @@ import eyeIcon from '/eye-svgrepo-com.svg';
 import eyeSlashIcon from '/eye-slash-svgrepo-com.svg';
 import { Copy, Edit2, Trash } from 'lucide-react';
 import { ToastContainer, toast } from 'react-toastify';
+import { v4 as uuidv4 } from 'uuid';
+
 
 function Manager() {
     const [passwordArray, setPasswordArray] = useState([])
@@ -35,15 +37,36 @@ function Manager() {
         navigator.clipboard.writeText(text)
     }
     const savePassword = () => {
-
-        setPasswordArray([...passwordArray, Form])
-        localStorage.setItem("passwords", JSON.stringify([...passwordArray, Form]))
+        if (!Form || !Form.site || !Form.username || !Form.password) {
+            alert("No items to save ")
+        }
+else{
+        setPasswordArray([...passwordArray, { ...Form, id: uuidv4() }])
+        localStorage.setItem("passwords", JSON.stringify([...passwordArray, { ...Form, id: uuidv4() }]))
         console.log([...passwordArray, Form])
+        setForm({ site: "", username: "", password: "" })
+}
+    }
+
+    const deletePassword = (id) => {
+        let c = confirm('Do you want to delete this Password?')
+        if (c) {
+            console.log("deleting the items wit id =", id)
+            setPasswordArray(passwordArray.filter(item => item.id !== id))
+            localStorage.setItem("passwords", JSON.stringify(passwordArray.filter(item => item.id !== id)))
+        }
 
     }
 
+    const editPassword = (id) => {
+        console.log("editing the items wit id =", id)
+        setForm(passwordArray.filter(item => item.id === id)[0])
+        setPasswordArray(passwordArray.filter(item => item.id !== id))
+    }
 
     const handlechange = (e) => {
+
+
         setForm({ ...Form, [e.target.name]: e.target.value })
 
     }
@@ -79,7 +102,10 @@ function Manager() {
 
                 <div className='text-black flex flex-col p-4 gap-8 max-w-4xl mx-auto'>
                     <div className='relative'>
-                        <input className='bg-purple-100 border-2 border-purple-300 rounded-2xl py-1 px-2 w-full ' value={Form.site} onChange={handlechange} placeholder='Add Website Link' type="text" name='site' />
+                        <input className='bg-purple-100 border-2 border-purple-300 rounded-2xl py-1 px-2 w-full '
+                            value={Form.site} onChange={handlechange}
+                            placeholder='Add Website Link' type="text"
+                            name='site' />
                         <span className="absolute right-2 top-1/2 transform -translate-y-1/2 cursor-pointer">
                             <img
 
@@ -91,7 +117,10 @@ function Manager() {
                     </div>
                     <div className='flex gap-3 '>
                         <div className='relative w-2/3'>
-                            <input className='bg-purple-100 border-2 border-purple-300 rounded-2xl py-1 px-2 w-full' value={Form.username} onChange={handlechange} placeholder='Add Username ' type="text" name='username' />
+                            <input className='bg-purple-100 border-2 border-purple-300 rounded-2xl py-1 px-2 w-full'
+                                value={Form.username} onChange={handlechange}
+                                placeholder='Add Username ' type="text"
+                                name='username' />
                             <span className="absolute right-2 top-1/2 transform -translate-y-1/2 cursor-pointer ">
                                 <img
                                     src="/user-svgrepo-com.svg"
@@ -101,7 +130,10 @@ function Manager() {
                             </span>
                         </div>
                         <div className='relative w-1/3'>
-                            <input className='bg-purple-100 border-2 border-purple-300 rounded-2xl py-1 px-2 w-full' value={Form.password} onChange={handlechange} placeholder='Add Password ' type={Eye ? 'Test' : 'password'} name='password' />
+                            <input className='bg-purple-100 border-2 border-purple-300 rounded-2xl py-1 px-2 w-full'
+                                value={Form.password} onChange={handlechange}
+                                placeholder='Add Password ' type={Eye ? 'Test' : 'password'}
+                                name='password' />
                             <span className="absolute right-2 top-1/2 transform -translate-y-1/2 cursor-pointer">
                                 <img onClick={() => setEye(!Eye)}
                                     src={Eye ? eyeIcon : eyeSlashIcon}
@@ -161,9 +193,9 @@ function Manager() {
                                     </div>
                                 </td>
                                 <td className=' py-2 border border-white text-center w-32 '>
-                                    <div className='flex justify-center items-center gap-5'>                               
-                                        <Edit2 className="w-4 h-4 opacity-70 hover:opacity-100 cursor-pointer" />
-                                        < Trash className="w-4 h-4  opacity-70 hover:opacity-100 cursor-pointer" />
+                                    <div className='flex justify-center items-center gap-5'>
+                                        <Edit2 onClick={() => { editPassword(item.id) }} className="w-4 h-4 opacity-70 hover:opacity-100 cursor-pointer" />
+                                        <Trash onClick={() => { deletePassword(item.id) }} className="w-4 h-4  opacity-70 hover:opacity-100 cursor-pointer" />
                                     </div>
                                 </td>
                             </tr>
