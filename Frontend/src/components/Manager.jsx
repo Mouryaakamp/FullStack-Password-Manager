@@ -13,10 +13,16 @@ function Manager() {
 
 
     useState(() => {
-        let passwords = localStorage.getItem("passwords")
-        if (passwords) {
-            setPasswordArray(JSON.parse(passwords))
-        }
+        // let passwords = localStorage.getItem("passwords")
+        // if (passwords) {
+        //     setPasswordArray(JSON.parse(passwords))
+        // }
+
+        fetch('http://localhost:3000/')
+            .then(res => res.json())
+            .then(data => setPasswordArray(data))
+
+            .catch(err => console.error("Error fetching passwords:", err));
 
     }, [])
 
@@ -31,29 +37,82 @@ function Manager() {
             draggable: true,
             progress: undefined,
             theme: "colored",
-
         });
 
         navigator.clipboard.writeText(text)
     }
-    const savePassword = () => {
+
+    const savePassword = async () => {
         if (!Form || !Form.site || !Form.username || !Form.password) {
             alert("No items to save ")
         }
-else{
-        setPasswordArray([...passwordArray, { ...Form, id: uuidv4() }])
-        localStorage.setItem("passwords", JSON.stringify([...passwordArray, { ...Form, id: uuidv4() }]))
-        console.log([...passwordArray, Form])
-        setForm({ site: "", username: "", password: "" })
-}
+        else {
+            // setPasswordArray([...passwordArray, { ...Form, id: uuidv4() }])
+            // localStorage.setItem("passwords", JSON.stringify([...passwordArray, { ...Form, id: uuidv4() }]))
+            // console.log([...passwordArray, Form])
+
+
+            let res = await fetch('http://localhost:3000/save', {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    site: Form.site,
+                    username: Form.username,
+                    password: Form.password
+                })
+            });
+
+            const data = await res.json();
+            console.log(data);
+
+            setForm({ site: "", username: "", password: "" })
+
+
+            toast.success('Password Saved', {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: false,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: "colored",
+            });
+
+
+        }
     }
 
-    const deletePassword = (id) => {
+    const deletePassword = async (_id) => {
         let c = confirm('Do you want to delete this Password?')
         if (c) {
-            console.log("deleting the items wit id =", id)
-            setPasswordArray(passwordArray.filter(item => item.id !== id))
-            localStorage.setItem("passwords", JSON.stringify(passwordArray.filter(item => item.id !== id)))
+            // console.log("deleting the items wit id =", id)
+            // setPasswordArray(passwordArray.filter(item => item.id !== id))
+            // localStorage.setItem("passwords", JSON.stringify(passwordArray.filter(item => item.id !== id)))
+
+            try {
+                const res = await fetch(`http://localhost:3000/delete/${_id}`, { method: "DELETE" });
+                const data = await res.json();
+                console.log(data);
+
+            } catch (err) {
+                console.error("Error deleting password:", err);
+            }
+
+            toast.warn('Password Deleated', {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: false,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: "colored",
+            });
+
+
         }
 
     }
@@ -65,7 +124,6 @@ else{
     }
 
     const handlechange = (e) => {
-
 
         setForm({ ...Form, [e.target.name]: e.target.value })
 
@@ -100,7 +158,7 @@ else{
                     <p className='text-xl'>Your Password Manager</p>
                 </div>
 
-                <div className='text-black flex flex-col p-4 gap-8 max-w-4xl mx-auto'>
+                <div className='text-black flex flex-col  p-4 gap-8 max-w-4xl mx-auto'>
                     <div className='relative'>
                         <input className='bg-purple-100 border-2 border-purple-300 rounded-2xl py-1 px-2 w-full '
                             value={Form.site} onChange={handlechange}
@@ -195,7 +253,7 @@ else{
                                 <td className=' py-2 border border-white text-center w-32 '>
                                     <div className='flex justify-center items-center gap-5'>
                                         <Edit2 onClick={() => { editPassword(item.id) }} className="w-4 h-4 opacity-70 hover:opacity-100 cursor-pointer" />
-                                        <Trash onClick={() => { deletePassword(item.id) }} className="w-4 h-4  opacity-70 hover:opacity-100 cursor-pointer" />
+                                        <Trash onClick={() => { deletePassword(item._id) }} className="w-4 h-4  opacity-70 hover:opacity-100 cursor-pointer" />
                                     </div>
                                 </td>
                             </tr>
