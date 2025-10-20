@@ -6,9 +6,11 @@ import { ToastContainer, toast } from 'react-toastify';
 import { v4 as uuidv4 } from 'uuid';
 
 
+
 function Manager() {
     const [passwordArray, setPasswordArray] = useState([])
     const [Eye, setEye] = useState(false)
+    const [editingId, setEditingId] = useState(null);
     const [Form, setForm] = useState({ site: "", username: "", password: "" })
 
 
@@ -18,11 +20,12 @@ function Manager() {
         //     setPasswordArray(JSON.parse(passwords))
         // }
 
+
         fetch('http://localhost:3000/')
             .then(res => res.json())
             .then(data => setPasswordArray(data))
-
             .catch(err => console.error("Error fetching passwords:", err));
+
 
     }, [])
 
@@ -51,33 +54,34 @@ function Manager() {
             // localStorage.setItem("passwords", JSON.stringify([...passwordArray, { ...Form, id: uuidv4() }]))
             // console.log([...passwordArray, Form])
 
+            if (editingId) {
+                // EDIT CASE
+                const res = await fetch(`http://localhost:3000/edit/${editingId}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(Form),
+                });
+                const data = await res.json();
+                console.log(data.message);
 
-            let res = await fetch('http://localhost:3000/save', {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    site: Form.site,
-                    username: Form.username,
-                    password: Form.password
-                })
-            });
-
-            const data = await res.json();
-            console.log(data);
+                setPasswordArray(prev => prev.map(p => p.id === editingId ? data.updatedPassword : p));
+                setEditingId(null);  // reset editing
+            } else {
+                // ADD CASE
+                const res = await fetch('http://localhost:3000/save', {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ id: uuidv4(), ...Form }),
+                });
+                const data = await res.json();
+                setPasswordArray(prev => [...prev, data.data]);
+            }
 
             setForm({ site: "", username: "", password: "" })
 
 
             toast.success('Password Saved', {
                 position: "top-right",
-                autoClose: 5000,
-                hideProgressBar: false,
-                closeOnClick: false,
-                pauseOnHover: true,
-                draggable: true,
-                progress: undefined,
                 theme: "colored",
             });
 
@@ -85,7 +89,7 @@ function Manager() {
         }
     }
 
-    const deletePassword = async (_id) => {
+    const deletePassword = async (id) => {
         let c = confirm('Do you want to delete this Password?')
         if (c) {
             // console.log("deleting the items wit id =", id)
@@ -93,22 +97,19 @@ function Manager() {
             // localStorage.setItem("passwords", JSON.stringify(passwordArray.filter(item => item.id !== id)))
 
             try {
-                const res = await fetch(`http://localhost:3000/delete/${_id}`, { method: "DELETE" });
+                const res = await fetch(`http://localhost:3000/delete/${id}`, {
+                    method: "DELETE"
+                });
                 const data = await res.json();
-                console.log(data);
+                console.log(data.message);
 
             } catch (err) {
                 console.error("Error deleting password:", err);
             }
+            setPasswordArray(passwordArray.filter(item => item.id !== id))
 
             toast.warn('Password Deleated', {
                 position: "top-right",
-                autoClose: 5000,
-                hideProgressBar: false,
-                closeOnClick: false,
-                pauseOnHover: true,
-                draggable: true,
-                progress: undefined,
                 theme: "colored",
             });
 
@@ -117,10 +118,16 @@ function Manager() {
 
     }
 
-    const editPassword = (id) => {
-        console.log("editing the items wit id =", id)
-        setForm(passwordArray.filter(item => item.id === id)[0])
-        setPasswordArray(passwordArray.filter(item => item.id !== id))
+    const editPassword = async (id) => {
+        // console.log("editing the items wit id =", id)
+        // setForm(passwordArray.filter(item => item.id === id)[0])
+        // setPasswordArray(passwordArray.filter(item => item.id !== id))
+
+        const item = passwordArray.find(item => item.id === id);
+        if (!item) return;
+
+        setForm(item);
+        setEditingId(id);
     }
 
     const handlechange = (e) => {
@@ -253,7 +260,7 @@ function Manager() {
                                 <td className=' py-2 border border-white text-center w-32 '>
                                     <div className='flex justify-center items-center gap-5'>
                                         <Edit2 onClick={() => { editPassword(item.id) }} className="w-4 h-4 opacity-70 hover:opacity-100 cursor-pointer" />
-                                        <Trash onClick={() => { deletePassword(item._id) }} className="w-4 h-4  opacity-70 hover:opacity-100 cursor-pointer" />
+                                        <Trash onClick={() => { deletePassword(item.id) }} className="w-4 h-4  opacity-70 hover:opacity-100 cursor-pointer" />
                                     </div>
                                 </td>
                             </tr>
