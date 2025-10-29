@@ -11,7 +11,6 @@ function App() {
 
   return (
     <>
-    <Auth/>
       <Navbar />
       <div className='min-h-[80vh]'>
         <Manager />
