@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import eyeIcon from '/eye-svgrepo-com.svg';
 import eyeSlashIcon from '/eye-slash-svgrepo-com.svg';
 import { Copy, Edit2, Trash } from 'lucide-react';
@@ -14,18 +14,16 @@ function Manager() {
     const [Form, setForm] = useState({ site: "", username: "", password: "" })
 
 
-    useState(() => {
+    useEffect(() => {
         // let passwords = localStorage.getItem("passwords")
         // if (passwords) {
         //     setPasswordArray(JSON.parse(passwords))
         // }
 
-
         fetch('http://localhost:3000/')
             .then(res => res.json())
             .then(data => setPasswordArray(data))
             .catch(err => console.error("Error fetching passwords:", err));
-
 
     }, [])
 
