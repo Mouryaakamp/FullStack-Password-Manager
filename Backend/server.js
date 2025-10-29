@@ -1,68 +1,77 @@
 const express = require('express')
 const app = express()
-const dotenv = require('dotenv')
-const mongoose = require('mongoose');
 const password = require('./model/dbmodel.js');
-const cors = require('cors')
+const cors = require('cors');
+const cookieParser = require('cookie-parser');
+const bcrypt = require('bcrypt')
+var jwt = require('jsonwebtoken');
 
 
-
+app.use(cookieParser())
 app.use(express.json());
 app.use(cors())
-dotenv.config()
 
 
-mongoose.connect(process.env.MONGO_URI)
-    .then(() => console.log('connected to mongodb'))
-    .catch(err => console.error('MongoDB connection error:', err));
+app.get('/login', (req, res) => {
+    let token = jwt.sign({ email: 'mourya.aka.mp@gmail.com' }, 'shhhhh');
+    res.cookie("token", token)
+    res.send("done")
+})
+
+
+app.get("/read", (req, res) => {
+    let data = jwt.verify(req.cookies.token, "shhhhh")
+    console.log(data)
+    res.send(data)
+})
 
 
 
-app.post('/save', async (req, res) => {
+
+
+app.get('/', async (req, res) => {
     try {
-        const newpassword = new password({
-            id: req.body.id,
-            site: req.body.site,
-            username: req.body.username,
-            password: req.body.password
-        });
-        await newpassword.save();
-        res.json({ message: "saved", data: newpassword });
-    } catch (e) {
-        console.error("Error saving password:", e);
-        res.status(500).json({ error: "Failed to save password" });
+        const passwords = await password.find();
+        res.status(200).json(passwords);
+
+    } catch (err) {
+        res.status(500).json({ message: 'Error fetching passwords', error: err.message });
     }
 });
 
 
 
-
 app.post('/save', async (req, res) => {
+    const userdata = req.body
     try {
-        console.log(req.body)
         const newpassword = new password({
-            id: req.body.id,
-            site: req.body.site,
-            username: req.body.username,
-            password: req.body.password
-        })
-        await newpassword.save()
+            id: userdata.id,
+            site: userdata.site,
+            username: userdata.username,
+            password: userdata.password
+        });
+        await newpassword.save();
         res.json({ message: "saved", data: newpassword });
     }
+
     catch (e) {
-        console.log("error", e)
+        console.error("Error saving password:", e);
+        res.status(500).json({ error: "Failed to save password" });
     }
-})
+
+});
+
+
 
 app.put("/edit/:id", async (req, res) => {
     try {
         const id = req.params.id;
-        const updatedData = req.body; 
+        const updatedData = req.body;
 
         const updatedPassword = await password.findOneAndUpdate(
-            { id },           
-            updatedData,   
-            { new: true }     
+            { id },
+            updatedData,
+            { new: true }
         );
 
         if (!updatedPassword) {
