@@ -133,7 +133,13 @@ function Manager() {
         setForm({ ...Form, [e.target.name]: e.target.value })
 
     }
+    const logout = () => {
+        fetch("http://localhost:3000/log-out", {
+            method: "GET",
+            credentials: "include",
+        })
 
+    }
 
     return (
         <>
@@ -154,7 +160,9 @@ function Manager() {
 
 
             <div className='mt-8'>
-
+                <button className='bg-amber-700 rounded-md p-1 m-1 text-white cursor-pointer ' onClick={logout}>
+                    Log-out
+                </button>
 
                 <div className='text-3xl text-purple-300 text-center font-bold mx-auto max-w-3xl '>
                     <span className='text-green-600'> &lt;</span>

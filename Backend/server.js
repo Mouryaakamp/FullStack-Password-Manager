@@ -1,6 +1,7 @@
 const express = require('express')
 const app = express()
 const password = require('./model/dbmodel.js');
+const user = require('./model/user.js')
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const bcrypt = require('bcrypt')
@@ -9,25 +10,61 @@ var jwt = require('jsonwebtoken');
 
 app.use(cookieParser())
 app.use(express.json());
-app.use(cors())
+app.use(cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+}));
 
 
-app.get('/login', (req, res) => {
-    let token = jwt.sign({ email: 'mourya.aka.mp@gmail.com' }, 'shhhhh');
-    res.cookie("token", token)
-    res.send("done")
+
+app.post("/sigh-in", (req, res) => {
+    const { email, password } = req.body
+
+    bcrypt.genSalt(10, function (err, salt) {
+        bcrypt.hash(password, salt, async function (err, hash) {
+            const newuser = await new user({
+                email: email,
+                password: hash
+            })
+            await newuser.save()
+        });
+
+        const token = jwt.sign({ email: email }, "secret key")
+        res.cookie("Token", token)
+        res.send("done")
+    });
+
+
 })
 
 
-app.get("/read", (req, res) => {
-    let data = jwt.verify(req.cookies.token, "shhhhh")
-    console.log(data)
-    res.send(data)
+app.post('/login', async (req, res) => {
+    const { email, password } = req.body
+    let User = await user.findOne({ email: email })
+    if (!email) return res.send("Somthing went wrong ")
+
+
+    bcrypt.compare(password, User.password, function (err, result) {
+        if (result) {
+            const token = jwt.sign({ email: User.email }, "secret key")
+            res.cookie("Token", token)
+            res.send("Yes you can login ")
+
+        }
+        else {
+            res.send("No you cant login somthing wend wrong")
+        }
+    });
 })
 
-
-
-
+app.get("/log-out", (req, res) => {
+    res.clearCookie("Token", {
+        httpOnly: true,
+        secure: false,
+        sameSite: "lax",
+    });
+    res.json({ message: "Logged out successfully" });
+})
 
 app.get('/', async (req, res) => {
     try {
