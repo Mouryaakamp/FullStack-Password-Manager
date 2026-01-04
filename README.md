@@ -1,24 +1,21 @@
-# 🔐 Full-Stack Password Manager
+# 🔐 VaultGuard - Full-Stack Password Manager
 
 A secure **full-stack password manager** built using the **MERN stack**, supporting **two storage modes**:
 
 1. **LocalStorage Mode** – Offline, browser-only storage  
 2. **Database Mode** – Online, MongoDB-based storage with authentication  
 
-This project is designed so users can choose how and where their passwords are stored.
-
 ---
 
 ## ✨ Features
 
-- User authentication (Sign-up / Login / Logout)
-- JWT authentication using HTTP-only cookies
-- Secure password hashing with bcrypt
-- Add, edit, and delete saved passwords
-- Two storage options:
-  - Browser LocalStorage
-  - MongoDB database
-- Modern UI built with React, Vite, and Tailwind CSS
+- 🔒 User authentication (Sign-up / Login / Logout)
+- 🎫 JWT authentication using HTTP-only cookies
+- 🔐 Secure password hashing with bcrypt
+- ✏️ Add, edit, and delete saved passwords
+- 💾 Two storage options: LocalStorage or MongoDB
+- 🎨 Modern UI with dark glassmorphism design
+- 📋 Copy to clipboard functionality
 
 ---
 
@@ -26,114 +23,199 @@ This project is designed so users can choose how and where their passwords are s
 
 ### 1️⃣ LocalStorage Mode (Offline)
 
-In this mode:
-- Passwords are stored **only in the browser**
+- Passwords stored **only in the browser**
 - No backend or database required
 - Works completely offline
 - Data is device-specific
 - Best for personal use or learning projects
 
-⚠️ Clearing browser data will remove all saved passwords.
-
----
+⚠️ **Warning:** Clearing browser data will remove all saved passwords.
 
 ### 2️⃣ Database Mode (Online – Recommended)
 
-In this mode:
-- Passwords are stored securely in **MongoDB**
+- Passwords stored securely in **MongoDB**
 - Requires backend server
-- Data is linked to user accounts
+- Data linked to user accounts
 - Accessible across devices
 - Suitable for real-world applications
 
 ---
 
-## 🔁 Switching Between Storage Modes
+## 🚀 Quick Start
 
-### ✅ Using LocalStorage Mode
+### Prerequisites
 
-1. **Download / clone ONLY the Frontend folder**
-2. Open the file:
+- Node.js (v14 or higher)
+- MongoDB (for Database Mode)
+- npm or yarn
 
-Frontend/src/components/Manager.jsx
+---
 
+## 🔁 Setup Instructions
 
-3. **Uncomment the LocalStorage code**
-4. **Comment out the API fetch code**
+### ✅ LocalStorage Mode (Offline)
 
-#### Enable LocalStorage
-```js
-useEffect(() => {
-const passwords = localStorage.getItem("passwords");
-if (passwords) {
- setPasswordArray(JSON.parse(passwords));
-}
-}, []);
+1. **Clone/download the Frontend folder**
 
+2. Navigate to:
+   ```
+   Frontend/src/components/Manager.jsx
+   ```
 
-Disable backend fetch
+3. **Enable LocalStorage code:**
+   ```js
+   // ✅ ENABLE this
+   useEffect(() => {
+     const passwords = localStorage.getItem("passwords");
+     if (passwords) {
+       setPasswordArray(JSON.parse(passwords));
+     }
+   }, []);
+   
+   localStorage.setItem("passwords", JSON.stringify(passwordArray));
+   
+   // ❌ DISABLE backend fetch
+   // fetch("http://localhost:3000/passwords", {
+   //   credentials: "include",
+   // });
+   ```
 
-// fetch("http://localhost:3000/passwords", {
-//   credentials: "include",
-// });
+4. Install and run:
+   ```bash
+   cd Frontend
+   npm install
+   npm run dev
+   ```
 
+✅ **No backend required • No login required**
 
-localStorage.setItem("passwords", JSON.stringify(passwordArray));
+---
 
-No backend required
-No login required
+### ✅ Database Mode (Recommended)
 
-Using Database Mode
+#### 1. Setup Backend
 
-1.Clone both Frontend and Backend
-
-2.Install dependencies in both folders:
-
+```bash
+cd Backend
 npm install
+```
 
-3.Create a .env file inside Backend:
-
+Create `.env` file in `Backend` folder:
+```env
 PORT=3000
-JWT_SECRET=your_secret_key
+JWT_SECRET=your_secret_key_here
 MONGO_URI=your_mongodb_connection_string
+```
 
-4.Start the backend server:
+Get MongoDB URI from [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) (free tier available)
 
+Start backend:
+```bash
 npm start
+```
 
-Start the frontend:
+#### 2. Setup Frontend
 
-npm run dev 
+```bash
+cd Frontend
+npm install
+npm run dev
+```
 
+Make sure API calls are **enabled** in `Manager.jsx` (default state)
 
-🔐 Authentication Flow (Database Mode)
+---
 
-Sign-up / Login
-   ↓
-JWT created on backend
-   ↓
+## 🔐 Authentication Flow
+
+```
+User Sign-up / Login
+       ↓
+JWT token created
+       ↓
 Stored in HTTP-only cookie
-   ↓
+       ↓
 Cookie sent with every request
-   ↓
+       ↓
 Auth middleware validates user
+       ↓
+Access granted
+```
 
+---
 
-🚪Logout
+## 🛠 Tech Stack
 
-Clears authentication cookie
+**Frontend:** React, Vite, Tailwind CSS, Lucide React  
+**Backend:** Node.js, Express, MongoDB, Mongoose  
+**Security:** JWT, bcrypt, HTTP-only cookies
 
-Redirects user to Welcome page
+---
 
-Blocks access to protected routes
+## 📁 Project Structure
 
+```
+password-manager/
+│
+├── Frontend/
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── WelcomePage.jsx
+│   │   │   ├── Login.jsx
+│   │   │   ├── Signin.jsx
+│   │   │   └── Manager.jsx
+│   │   └── App.jsx
+│   └── package.json
+│
+└── Backend/
+    ├── models/
+    ├── routes/
+    ├── middleware/
+    ├── server.js
+    └── .env
+```
 
-🛠 Tech Stack
+---
 
-Frontend: React, Vite, Tailwind CSS
+## 🐛 Troubleshooting
 
-Backend: Node.js, Express
+**Backend won't start:**
+- Check if MongoDB is running
+- Verify `.env` configuration
+- Ensure port 3000 is available
 
-Database: MongoDB, Mongoose
+**Frontend can't connect:**
+- Verify backend is running on `http://localhost:3000`
+- Check `credentials: "include"` in fetch requests
 
-Authentication: JWT, Cookies
+**Authentication issues:**
+- Clear browser cookies
+- Verify JWT_SECRET in `.env`
+
+---
+
+## 📸 Screenshots
+
+### Welcome Page
+![Welcome Page](screenshots/welcome.png)
+
+### Login Page
+![Login Page](screenshots/login.png)
+
+### Sign Up Page
+![Sign Up Page](screenshots/signup.png)
+
+### Password Manager
+![Password Manager](screenshots/manager.png)
+
+---
+
+## 🔮 Future Enhancements
+
+- [ ] Password strength indicator
+- [ ] Two-factor authentication (2FA)
+- [ ] Password generator
+- [ ] Browser extension
+- [ ] Import/Export functionality
+
+---
