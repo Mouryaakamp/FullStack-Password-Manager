@@ -18,17 +18,10 @@ function App() {
     <>
       <BrowserRouter>
         <Routes>
-           <Route path="/" element={<WelcomePage />} />
+          <Route path="/" element={<WelcomePage />} />
           <Route path="/sign-in" element={<Signin />} />
           <Route path="/log-in" element={<Login />} />
-          <Route path="/pass-manager"
-            element={<>
-              <Navbar />
-              <div className='min-h-[80vh]'>
-                <Manager />
-              </div>
-              <Footer />
-            </>} />
+          <Route path="/pass-manager" element={<Manager />} />
         </Routes>
       </BrowserRouter>
     </>

@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react'
-import eyeIcon from '/eye-svgrepo-com.svg';
-import eyeSlashIcon from '/eye-slash-svgrepo-com.svg';
-import { Copy, Edit2, Trash } from 'lucide-react';
+import { Copy, Edit2, Trash, LogOut, Link, User, Lock, Eye, EyeOff, Plus } from 'lucide-react';
 import { ToastContainer, toast } from 'react-toastify';
 import { v4 as uuidv4 } from 'uuid';
 import { useNavigate } from 'react-router-dom';
+import Navbar from './Navbar';
+import Footer from './Footer';
 
 
 
@@ -44,30 +44,38 @@ function Manager() {
     }, [])
 
 
-    const copytext = (text) => {
-        toast.success('Copied to Clipboard', {
-            position: "top-right",
-            autoClose: 5000,
-            hideProgressBar: false,
-            closeOnClick: false,
-            pauseOnHover: true,
-            draggable: true,
-            progress: undefined,
-            theme: "colored",
-        });
-
-        navigator.clipboard.writeText(text)
+    const copytext = async (text) => {
+        try {
+            await navigator.clipboard.writeText(text);
+            toast.success('Copied to Clipboard', {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: false,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: "colored",
+            });
+        } catch (err) {
+            console.error("Failed to copy:", err);
+            toast.error('Failed to copy to clipboard', {
+                position: "top-right",
+                theme: "colored",
+            });
+        }
     }
 
     const savePassword = async () => {
         if (!Form || !Form.site || !Form.username || !Form.password) {
-            alert("No items to save ")
+            toast.error("Please fill in all fields", {
+                position: "top-right",
+                theme: "colored",
+            });
+            return;
         }
-        else {
-            // setPasswordArray([...passwordArray, { ...Form, id: uuidv4() }])
-            // localStorage.setItem("passwords", JSON.stringify([...passwordArray, { ...Form, id: uuidv4() }]))
-            // console.log([...passwordArray, Form])
 
+        try {
             if (editingId) {
                 // EDIT CASE
                 const res = await fetch(`http://localhost:3000/edit/${editingId}`, {
@@ -80,12 +88,16 @@ function Manager() {
                 if (res.ok) {
                     setPasswordArray(prev => prev.map(p => p.id === editingId ? data : p));
                     setEditingId(null);  // reset editing
-                } else {
-                    toast.error('Failed to update password', {
+                    setForm({ site: "", username: "", password: "" });
+                    toast.success('Password Updated', {
                         position: "top-right",
                         theme: "colored",
                     });
-                    return;
+                } else {
+                    toast.error(data.message || 'Failed to update password', {
+                        position: "top-right",
+                        theme: "colored",
+                    });
                 }
             } else {
                 // ADD CASE
@@ -98,24 +110,24 @@ function Manager() {
                 const data = await res.json();
                 if (res.ok) {
                     setPasswordArray(prev => [...prev, data]);
-                } else {
-                    toast.error('Failed to save password', {
+                    setForm({ site: "", username: "", password: "" });
+                    toast.success('Password Saved', {
                         position: "top-right",
                         theme: "colored",
                     });
-                    return;
+                } else {
+                    toast.error(data.message || 'Failed to save password', {
+                        position: "top-right",
+                        theme: "colored",
+                    });
                 }
             }
-
-            setForm({ site: "", username: "", password: "" })
-
-
-            toast.success('Password Saved', {
+        } catch (err) {
+            console.error("Error saving password:", err);
+            toast.error('An error occurred while saving', {
                 position: "top-right",
                 theme: "colored",
             });
-
-
         }
     }
 
@@ -133,7 +145,7 @@ function Manager() {
                 });
                 const data = await res.json();
                 if (res.ok) {
-                    setPasswordArray(passwordArray.filter(item => item.id !== id));
+                    setPasswordArray(prev => prev.filter(item => item.id !== id));
                 } else {
                     toast.error('Failed to delete password', {
                         position: "top-right",
@@ -193,7 +205,7 @@ function Manager() {
         }
     }
 
-    return (
+     return (
         <>
             <ToastContainer
                 position="top-right"
@@ -207,128 +219,186 @@ function Manager() {
                 pauseOnHover
                 theme="colored"
             />
-            <div className="absolute inset-0 -z-10 h-full w-full bg-white [background:radial-gradient(125%_125%_at_50%_10%,#fff_40%,#63e_100%)]">
-            </div>
-
-
-            <div className='mt-8'>
-                <button className='bg-amber-700 rounded-md p-1 m-1 text-white cursor-pointer ' onClick={logout}>
-                    Log-out
-                </button>
-
-                <div className='text-3xl text-purple-300 text-center font-bold mx-auto max-w-3xl '>
-                    <span className='text-green-600'> &lt;</span>
-                    <span className='text-black' >Pass</span><span className='text-green-300'>OP</span>
-                    <span className='text-green-600'>/ &gt;</span>
-                    <p className='text-xl'>Your Password Manager</p>
+            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-hidden">
+                {/* Animated background elements */}
+                <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                    <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-pulse"></div>
+                    <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-indigo-500 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-pulse delay-1000"></div>
                 </div>
 
-                <div className='text-black flex flex-col  p-4 gap-8 max-w-4xl mx-auto'>
-                    <div className='relative'>
-                        <input className='bg-purple-100 border-2 border-purple-300 rounded-2xl py-1 px-2 w-full '
-                            value={Form.site} onChange={handlechange}
-                            placeholder='Add Website Link' type="text"
-                            name='site' />
-                        <span className="absolute right-2 top-1/2 transform -translate-y-1/2 cursor-pointer">
-                            <img
+                <Navbar />
 
-                                src="/link-round-1110-svgrepo-com.svg"
-                                alt="Toggle visibility"
-                                className="w-5 h-5 opacity-80 hover:opacity-100 transition"
+            <div className='relative z-10 max-w-5xl mx-auto px-6 py-8'>
+                {/* Header Section */}
+                <div className='flex justify-between items-center mb-8'>
+                    <div>
+                        <h1 className='text-4xl font-black text-white mb-2 tracking-tight'>
+                            Your Vault
+                        </h1>
+                        <p className='text-indigo-300 text-sm'>Manage your credentials securely</p>
+                    </div>
+                    <button 
+                        onClick={logout}
+                        className='px-4 py-2 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 text-white font-semibold hover:bg-white/20 transition-all duration-300 flex items-center gap-2'
+                    >
+                        <LogOut className="w-4 h-4" />
+                        Log Out
+                    </button>
+                </div>
+
+                {/* Input Form Card */}
+                <div className='bg-white/10 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-6 mb-8'>
+                    <h2 className='text-xl font-bold text-white mb-4'>{editingId ? 'Edit Credential' : 'Add New Credential'}</h2>
+                    
+                    <div className='space-y-4'>
+                        {/* Website Link Input */}
+                        <div className='relative'>
+                            <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-indigo-300">
+                                <Link className="w-5 h-5" />
+                            </div>
+                            <input 
+                                className='w-full bg-white/5 backdrop-blur-sm border border-white/20 rounded-xl py-3 pl-12 pr-4 text-white placeholder-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all'
+                                value={Form.site} 
+                                onChange={handlechange}
+                                placeholder='Website URL' 
+                                type="text"
+                                name='site' 
                             />
-                        </span>
-                    </div>
-                    <div className='flex gap-3 '>
-                        <div className='relative w-2/3'>
-                            <input className='bg-purple-100 border-2 border-purple-300 rounded-2xl py-1 px-2 w-full'
-                                value={Form.username} onChange={handlechange}
-                                placeholder='Add Username ' type="text"
-                                name='username' />
-                            <span className="absolute right-2 top-1/2 transform -translate-y-1/2 cursor-pointer ">
-                                <img
-                                    src="/user-svgrepo-com.svg"
-                                    alt="Toggle visibility"
-                                    className="w-5 h-5 opacity-80 hover:opacity-100 transition"
-                                />
-                            </span>
                         </div>
-                        <div className='relative w-1/3'>
-                            <input className='bg-purple-100 border-2 border-purple-300 rounded-2xl py-1 px-2 w-full'
-                                value={Form.password} onChange={handlechange}
-                                placeholder='Add Password ' type={Eye ? 'text' : 'password'}
-                                name='password' />
-                            <span className="absolute right-2 top-1/2 transform -translate-y-1/2 cursor-pointer">
-                                <img onClick={() => setEye(!Eye)}
-                                    src={Eye ? eyeIcon : eyeSlashIcon}
-                                    alt="Toggle visibility"
-                                    className="w-5 h-5 opacity-80 hover:opacity-100 transition"
+
+                        {/* Username and Password Inputs */}
+                        <div className='flex gap-4'>
+                            <div className='relative flex-1'>
+                                <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-indigo-300">
+                                    <User className="w-5 h-5" />
+                                </div>
+                                <input 
+                                    className='w-full bg-white/5 backdrop-blur-sm border border-white/20 rounded-xl py-3 pl-12 pr-4 text-white placeholder-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all'
+                                    value={Form.username} 
+                                    onChange={handlechange}
+                                    placeholder='Username' 
+                                    type="text"
+                                    name='username' 
                                 />
-                            </span>
-
+                            </div>
+                            <div className='relative flex-1'>
+                                <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-indigo-300">
+                                    <Lock className="w-5 h-5" />
+                                </div>
+                                <input 
+                                    className='w-full bg-white/5 backdrop-blur-sm border border-white/20 rounded-xl py-3 pl-12 pr-12 text-white placeholder-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all'
+                                    value={Form.password} 
+                                    onChange={handlechange}
+                                    placeholder='Password' 
+                                    type={Eye ? 'text' : 'password'}
+                                    name='password' 
+                                />
+                                <button 
+                                    onClick={() => setEye(!Eye)}
+                                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-indigo-300 hover:text-white transition-colors"
+                                >
+                                    {Eye ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
+                                </button>
+                            </div>
                         </div>
-                    </div>
 
-                    <button
-                        onClick={savePassword}
-                        className='bg-purple-300 w-60 m-auto border-2 rounded-xl flex justify-center items-center cursor-pointer hover:bg-purple-200'> <lord-icon
-                            src="https://cdn.lordicon.com/efxgwrkc.json"
-                            trigger="hover"
-                            colors="primary:#000000"
+                        {/* Add/Update Button */}
+                        <button
+                            onClick={savePassword}
+                            className='w-full px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold text-base hover:from-indigo-600 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-indigo-500/50 transform hover:scale-105 flex items-center justify-center gap-2 mt-4'
                         >
-                        </lord-icon> Add Credentials </button>
+                            <Plus className="w-5 h-5" />
+                            {editingId ? 'Update Credential' : 'Add Credential'}
+                        </button>
+                        {editingId && (
+                            <button
+                                onClick={() => {
+                                    setEditingId(null);
+                                    setForm({ site: "", username: "", password: "" });
+                                }}
+                                className='w-full px-6 py-3 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 text-white font-semibold hover:bg-white/20 transition-all duration-300 mt-2'
+                            >
+                                Cancel
+                            </button>
+                        )}
+                    </div>
                 </div>
 
+                {/* Passwords Table */}
+                <div className='bg-white/10 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 overflow-hidden'>
+                    <div className='p-6 border-b border-white/10'>
+                        <h2 className='text-2xl font-bold text-white'>Your Passwords</h2>
+                    </div>
+                    
+                    {passwordArray.length === 0 && (
+                        <div className='p-8 text-center text-indigo-300'>
+                            No passwords to show. Add your first credential above!
+                        </div>
+                    )}
+                    
+                    {passwordArray.length !== 0 && (
+                        <div className='overflow-x-auto'>
+                            <table className="w-full">
+                                <thead className='bg-gradient-to-r from-indigo-600 to-purple-600 text-white'>
+                                    <tr>
+                                        <th className='py-4 px-6 text-left font-semibold'>Site</th>
+                                        <th className='py-4 px-6 text-left font-semibold'>Username</th>
+                                        <th className='py-4 px-6 text-left font-semibold'>Password</th>
+                                        <th className='py-4 px-6 text-center font-semibold'>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {passwordArray.map((item, index) => (
+                                        <tr key={index} className='border-b border-white/10 hover:bg-white/5 transition-colors'>
+                                            <td className='py-4 px-6'>
+                                                <div className='flex items-center gap-3'>
+                                                    <a target="_blank" rel="noopener noreferrer" href={item.site} className='text-indigo-300 hover:text-white transition-colors truncate max-w-xs'>
+                                                        {item.site}
+                                                    </a>
+                                                    <button onClick={() => copytext(item.site)} className="text-indigo-400 hover:text-white transition-colors">
+                                                        <Copy className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                            <td className='py-4 px-6'>
+                                                <div className='flex items-center gap-3'>
+                                                    <span className='text-white'>{item.username}</span>
+                                                    <button onClick={() => copytext(item.username)} className="text-indigo-400 hover:text-white transition-colors">
+                                                        <Copy className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                            <td className='py-4 px-6'>
+                                                <div className='flex items-center gap-3'>
+                                                    <span className='text-white font-mono'>{'•'.repeat(item.password.length)}</span>
+                                                    <button onClick={() => copytext(item.password)} className="text-indigo-400 hover:text-white transition-colors">
+                                                        <Copy className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                            <td className='py-4 px-6'>
+                                                <div className='flex justify-center items-center gap-4'>
+                                                    <button onClick={() => editPassword(item.id)} className="text-indigo-400 hover:text-white transition-colors">
+                                                        <Edit2 className="w-4 h-4" />
+                                                    </button>
+                                                    <button onClick={() => deletePassword(item.id)} className="text-red-400 hover:text-red-300 transition-colors">
+                                                        <Trash className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </div>
             </div>
 
-
-            <div className=' m-7 '>
-                <h2 className='text-bold text-2xl font-bold py-4'>Your Passwords: </h2>
-                {passwordArray.length === 0 && <div> NO Passwords To Show</div>}
-                {passwordArray.length != 0 && <table className="table-auto w-full overflow-hidden rounded-xl">
-                    <thead className='bg-purple-600 text-white '>
-                        <tr>
-                            <th className='py-3'>Site Link</th>
-                            <th className='py-3'>Username</th>
-                            <th className='py-3'>Password</th>
-                            <th className='py-3'>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody className='bg-purple-100'>
-                        {passwordArray.map((item, index) => (
-
-                            <tr key={index}>
-                                <td className=' py-2 border border-white text-center w-32 ' >
-                                    <div className='flex justify-center items-center space-x-2'>
-                                        <a target="_blank" href={item.site} >{item.site} </a>
-                                        <Copy onClick={() => { copytext(item.site) }} className="w-4 h-4 opacity-70 hover:opacity-100 cursor-pointer" />
-                                    </div>
-                                </td>
-                                <td className=' py-2 border border-white text-center w-32 '>
-                                    <div className='flex justify-center items-center space-x-3'>
-                                        {item.username}
-                                        <Copy onClick={() => { copytext(item.username) }} className="w-4 m-2 h-4 opacity-70 hover:opacity-100 cursor-pointer" />
-                                    </div>
-                                </td>
-                                <td className=' py-2 border border-white text-center w-32 '>
-                                    <div className='flex justify-center items-center space-x-3'>
-                                        {item.password}
-                                        <Copy onClick={() => { copytext(item.password) }} className="w-4 h-4 m-2 opacity-70 hover:opacity-100 cursor-pointer" />
-                                    </div>
-                                </td>
-                                <td className=' py-2 border border-white text-center w-32 '>
-                                    <div className='flex justify-center items-center gap-5'>
-                                        <Edit2 onClick={() => { editPassword(item.id) }} className="w-4 h-4 opacity-70 hover:opacity-100 cursor-pointer" />
-                                        <Trash onClick={() => { deletePassword(item.id) }} className="w-4 h-4  opacity-70 hover:opacity-100 cursor-pointer" />
-                                    </div>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>}
+                <Footer />
             </div>
-
         </>
-    )
+    );
 }
 
 export default Manager
