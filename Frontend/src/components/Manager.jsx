@@ -4,6 +4,7 @@ import eyeSlashIcon from '/eye-slash-svgrepo-com.svg';
 import { Copy, Edit2, Trash } from 'lucide-react';
 import { ToastContainer, toast } from 'react-toastify';
 import { v4 as uuidv4 } from 'uuid';
+import { useNavigate } from 'react-router-dom';
 
 
 
@@ -12,6 +13,7 @@ function Manager() {
     const [Eye, setEye] = useState(false)
     const [editingId, setEditingId] = useState(null);
     const [Form, setForm] = useState({ site: "", username: "", password: "" })
+    const navigate = useNavigate()
 
 
     useEffect(() => {
@@ -20,10 +22,24 @@ function Manager() {
         //     setPasswordArray(JSON.parse(passwords))
         // }
 
-        fetch('http://localhost:3000/')
-            .then(res => res.json())
-            .then(data => setPasswordArray(data))
-            .catch(err => console.error("Error fetching passwords:", err));
+        fetch("http://localhost:3000/passwords", {
+            credentials: "include",
+        })
+            .then(res => {
+                if (!res.ok) {
+                    throw new Error(`HTTP ${res.status}`);
+                }
+                return res.json();
+            })
+            .then(data => {
+                setPasswordArray(Array.isArray(data) ? data : []);
+            })
+            .catch(err => {
+                console.error("Error fetching passwords:", err);
+                setPasswordArray([]); // prevent UI crash
+            });
+
+
 
     }, [])
 
@@ -58,21 +74,37 @@ function Manager() {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(Form),
+                    credentials: "include"
                 });
                 const data = await res.json();
-                console.log(data.message);
-
-                setPasswordArray(prev => prev.map(p => p.id === editingId ? data.updatedPassword : p));
-                setEditingId(null);  // reset editing
+                if (res.ok) {
+                    setPasswordArray(prev => prev.map(p => p.id === editingId ? data : p));
+                    setEditingId(null);  // reset editing
+                } else {
+                    toast.error('Failed to update password', {
+                        position: "top-right",
+                        theme: "colored",
+                    });
+                    return;
+                }
             } else {
                 // ADD CASE
                 const res = await fetch('http://localhost:3000/save', {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ id: uuidv4(), ...Form }),
+                    credentials: "include"
                 });
                 const data = await res.json();
-                setPasswordArray(prev => [...prev, data.data]);
+                if (res.ok) {
+                    setPasswordArray(prev => [...prev, data]);
+                } else {
+                    toast.error('Failed to save password', {
+                        position: "top-right",
+                        theme: "colored",
+                    });
+                    return;
+                }
             }
 
             setForm({ site: "", username: "", password: "" })
@@ -96,15 +128,27 @@ function Manager() {
 
             try {
                 const res = await fetch(`http://localhost:3000/delete/${id}`, {
-                    method: "DELETE"
+                    method: "DELETE",
+                    credentials: "include"
                 });
                 const data = await res.json();
-                console.log(data.message);
-
+                if (res.ok) {
+                    setPasswordArray(passwordArray.filter(item => item.id !== id));
+                } else {
+                    toast.error('Failed to delete password', {
+                        position: "top-right",
+                        theme: "colored",
+                    });
+                    return;
+                }
             } catch (err) {
                 console.error("Error deleting password:", err);
+                toast.error('Error deleting password', {
+                    position: "top-right",
+                    theme: "colored",
+                });
+                return;
             }
-            setPasswordArray(passwordArray.filter(item => item.id !== id))
 
             toast.warn('Password Deleated', {
                 position: "top-right",
@@ -133,12 +177,20 @@ function Manager() {
         setForm({ ...Form, [e.target.name]: e.target.value })
 
     }
-    const logout = () => {
-        fetch("http://localhost:3000/log-out", {
-            method: "GET",
-            credentials: "include",
-        })
+    const logout = async () => {
+        try {
+            const res = await fetch("http://localhost:3000/log-out", {
+                method: "GET",
+                credentials: "include",
+            });
+            if (!res.ok) {
+                throw new Error("Logout failed");
+            }
+            navigate("/");
 
+        } catch (err) {
+            console.error("Logout error:", err);
+        }
     }
 
     return (
@@ -203,7 +255,7 @@ function Manager() {
                         <div className='relative w-1/3'>
                             <input className='bg-purple-100 border-2 border-purple-300 rounded-2xl py-1 px-2 w-full'
                                 value={Form.password} onChange={handlechange}
-                                placeholder='Add Password ' type={Eye ? 'Test' : 'password'}
+                                placeholder='Add Password ' type={Eye ? 'text' : 'password'}
                                 name='password' />
                             <span className="absolute right-2 top-1/2 transform -translate-y-1/2 cursor-pointer">
                                 <img onClick={() => setEye(!Eye)}

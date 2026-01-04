@@ -1,153 +1,149 @@
-const express = require('express')
-const app = express()
-const password = require('./model/dbmodel.js');
-const user = require('./model/user.js')
-const cors = require('cors');
-const cookieParser = require('cookie-parser');
-const bcrypt = require('bcrypt')
-var jwt = require('jsonwebtoken');
+const express = require("express");
+const app = express();
+require("./model/dbmodel.js");
+const Password = require("./model/dbmodel.js");
+const User = require("./model/user.js");
+const cors = require("cors");
+const cookieParser = require("cookie-parser");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const auth = require("./middleware/authmiddleware.js");
 
-
-app.use(cookieParser())
+app.use(cookieParser());
 app.use(express.json());
 app.use(cors({
-    origin: "http://localhost:5173",
-    credentials: true,
+  origin: "http://localhost:5173",
+  credentials: true,
 }));
 
 
+app.get("/", (req, res) => {
+  res.send("Backend running");
+});
 
-app.post("/sigh-in", (req, res) => {
-    const { email, password } = req.body
 
-    bcrypt.genSalt(10, function (err, salt) {
-        bcrypt.hash(password, salt, async function (err, hash) {
-            const newuser = await new user({
-                email: email,
-                password: hash
-            })
-            await newuser.save()
-        });
+app.post("/sign-in", async (req, res) => {
+  try {
+    const { email, password } = req.body;
 
-        const token = jwt.sign({ email: email }, "secret key")
-        res.cookie("Token", token)
-        res.send("done")
+    const exists = await User.findOne({ email });
+    if (exists) return res.status(400).json({ message: "User exists" });
+
+    const hash = await bcrypt.hash(password, 10);
+
+    const user = await User.create({
+      email,
+      password: hash,
     });
 
+    const token = jwt.sign(
+      { id: user._id, email: user.email },
+      "secret key",
+      { expiresIn: "1d" }
+    );
 
-})
-
-
-app.post('/login', async (req, res) => {
-    const { email, password } = req.body
-    let User = await user.findOne({ email: email })
-    if (!email) return res.send("Somthing went wrong ")
-
-
-    bcrypt.compare(password, User.password, function (err, result) {
-        if (result) {
-            const token = jwt.sign({ email: User.email }, "secret key")
-            res.cookie("Token", token)
-            res.send("Yes you can login ")
-
-        }
-        else {
-            res.send("No you cant login somthing wend wrong")
-        }
+    res.cookie("Token", token, {
+      httpOnly: true,
+      sameSite: "lax",
     });
-})
+
+    res.status(201).json({ message: "User created" });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Sign-in failed" });
+  }
+});
+
+
+app.post("/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    const user = await User.findOne({ email });
+    if (!user) return res.status(401).json({ message: "Invalid credentials" });
+
+    const ok = await bcrypt.compare(password, user.password);
+    if (!ok) return res.status(401).json({ message: "Invalid credentials" });
+
+    const token = jwt.sign(
+      { id: user._id, email: user.email },
+      "secret key",
+      { expiresIn: "1d" }
+    );
+
+    res.cookie("Token", token, {
+      httpOnly: true,
+      sameSite: "lax",
+    });
+
+    res.json({ message: "Login successful" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Login failed" });
+  }
+});
+
 
 app.get("/log-out", (req, res) => {
-    res.clearCookie("Token", {
-        httpOnly: true,
-        secure: false,
-        sameSite: "lax",
+  res.clearCookie("Token");
+  res.json({ message: "Logged out" });
+  
+});
+
+
+app.get("/passwords", auth, async (req, res) => {
+  const passwords = await Password.find({ user: req.user._id });
+  res.json(passwords);
+});
+
+
+app.post("/save", auth, async (req, res) => {
+  const newPassword = await Password.create({
+    ...req.body,
+    user: req.user._id,
+  });
+
+  res.json(newPassword);
+});
+
+
+app.put("/edit/:id", auth, async (req, res) => {
+  try {
+    const updated = await Password.findOneAndUpdate(
+      { id: req.params.id, user: req.user._id },
+      req.body,
+      { new: true }
+    );
+    if (!updated) {
+      return res.status(404).json({ message: "Password not found" });
+    }
+    res.json(updated);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Update failed" });
+  }
+});
+
+
+app.delete("/delete/:id", auth, async (req, res) => {
+  try {
+    const deleted = await Password.findOneAndDelete({
+      id: req.params.id,
+      user: req.user._id,
     });
-    res.json({ message: "Logged out successfully" });
-})
-
-app.get('/', async (req, res) => {
-    try {
-        const passwords = await password.find();
-        res.status(200).json(passwords);
-
-    } catch (err) {
-        res.status(500).json({ message: 'Error fetching passwords', error: err.message });
+    if (!deleted) {
+      return res.status(404).json({ message: "Password not found" });
     }
+    res.json({ message: "Deleted" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Delete failed" });
+  }
 });
 
 
-
-app.post('/save', async (req, res) => {
-    const userdata = req.body
-    try {
-        const newpassword = new password({
-            id: userdata.id,
-            site: userdata.site,
-            username: userdata.username,
-            password: userdata.password
-        });
-        await newpassword.save();
-        res.json({ message: "saved", data: newpassword });
-    }
-
-    catch (e) {
-        console.error("Error saving password:", e);
-        res.status(500).json({ error: "Failed to save password" });
-    }
-
-});
-
-
-
-app.put("/edit/:id", async (req, res) => {
-    try {
-        const id = req.params.id;
-        const updatedData = req.body;
-
-        const updatedPassword = await password.findOneAndUpdate(
-            { id },
-            updatedData,
-            { new: true }
-        );
-
-        if (!updatedPassword) {
-            return res.status(404).json({ message: "Password not found" });
-        }
-
-        res.json({ message: "Password updated successfully", updatedPassword });
-    } catch (err) {
-        console.error("Edit route error:", err);
-        res.status(500).json({ error: "Server error" });
-    }
-});
-
-
-
-app.delete('/delete/:id', async (req, res) => {
-    try {
-        const id = req.params.id;
-        console.log("Trying to delete id:", id);
-
-        const deleted = await password.findOneAndDelete({ id });
-        if (!deleted) {
-            console.log("Password not found");
-            return res.status(404).json({ message: 'Password not found' });
-        }
-
-        res.json({ message: 'Password deleted successfully', deleted });
-    } catch (err) {
-        console.error("Delete route error:", err);
-        res.status(500).json({ error: 'Server error' });
-    }
-});
-
-
-
-const port = process.env.PORT
-
+const port = process.env.PORT || 3000;
 app.listen(port, () => {
-    console.log(`listening to port ${port}`)
-})
-
-
+  console.log(`listening on port ${port}`);
+});
