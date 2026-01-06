@@ -9,6 +9,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const auth = require("./middleware/authmiddleware.js");
 const jwt_key = process.env.JWT_TOKEN;
+app.set("trust proxy", 1);
 
 app.use(cookieParser());
 app.use(express.json());
