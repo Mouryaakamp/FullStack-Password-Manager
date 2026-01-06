@@ -8,6 +8,7 @@ const cookieParser = require("cookie-parser");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const auth = require("./middleware/authmiddleware.js");
+const jwt_key = process.env.JWT_TOKEN;
 
 app.use(cookieParser());
 app.use(express.json());
@@ -37,9 +38,7 @@ app.post("/sign-in", async (req, res) => {
     });
 
     const token = jwt.sign(
-      { id: user._id, email: user.email },
-      "secret key",
-      { expiresIn: "1d" }
+      { id: user._id, email: user.email }, jwt_key, { expiresIn: "1d" }
     );
 
     res.cookie("Token", token, {
@@ -67,9 +66,7 @@ app.post("/login", async (req, res) => {
     if (!ok) return res.status(401).json({ message: "Invalid credentials" });
 
     const token = jwt.sign(
-      { id: user._id, email: user.email },
-      "secret key",
-      { expiresIn: "1d" }
+      { id: user._id, email: user.email }, jwt_key, { expiresIn: "1d" }
     );
 
     res.cookie("Token", token, {
@@ -88,7 +85,7 @@ app.post("/login", async (req, res) => {
 app.get("/log-out", (req, res) => {
   res.clearCookie("Token");
   res.json({ message: "Logged out" });
-  
+
 });
 
 

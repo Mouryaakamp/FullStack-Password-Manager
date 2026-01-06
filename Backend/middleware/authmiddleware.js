@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
-const User = require("../model/user"); // adjust path if needed
-
+const User = require("../model/user"); 
+const jwt_key=process.env.JWT_TOKEN;
 const auth = async (req, res, next) => {
   try {
     const token = req.cookies.Token;
@@ -9,7 +9,7 @@ const auth = async (req, res, next) => {
       return res.status(401).json({ message: "No token provided" });
     }
 
-    const decoded = jwt.verify(token, "secret key");
+    const decoded = jwt.verify(token, jwt_key);
 
     const user = await User.findById(decoded.id);
 

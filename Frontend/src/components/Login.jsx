@@ -156,7 +156,7 @@ function Login() {
                 {/* Security Badge */}
                 <div className="text-center mt-6">
                     <p className="text-indigo-300 text-xs font-medium">
-                        🔒 Your data is encrypted end-to-end
+                        🔒 Your data is end-to-end encrypted 
                     </p>
                 </div>
             </div>
