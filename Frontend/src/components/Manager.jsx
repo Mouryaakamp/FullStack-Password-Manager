@@ -23,7 +23,7 @@ function Manager() {
         //     setPasswordArray(JSON.parse(passwords))
         // }
 
-        fetch("http://localhost:3000/passwords", {
+        fetch("https://offline-and-online-fullstack-password.onrender.com/passwords", {
             credentials: "include",
         })
             .then(res => {
@@ -79,7 +79,7 @@ function Manager() {
         try {
             if (editingId) {
                 // EDIT CASE
-                const res = await fetch(`http://localhost:3000/edit/${editingId}`, {
+                const res = await fetch(`https://offline-and-online-fullstack-password.onrender.com/edit/${editingId}`, {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(Form),
@@ -102,7 +102,7 @@ function Manager() {
                 }
             } else {
                 // ADD CASE
-                const res = await fetch('http://localhost:3000/save', {
+                const res = await fetch('https://offline-and-online-fullstack-password.onrender.com/save', {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ id: uuidv4(), ...Form }),
@@ -140,7 +140,7 @@ function Manager() {
             // localStorage.setItem("passwords", JSON.stringify(passwordArray.filter(item => item.id !== id)))
 
             try {
-                const res = await fetch(`http://localhost:3000/delete/${id}`, {
+                const res = await fetch(`https://offline-and-online-fullstack-password.onrender.com/delete/${id}`, {
                     method: "DELETE",
                     credentials: "include"
                 });
@@ -192,7 +192,7 @@ function Manager() {
     }
     const logout = async () => {
         try {
-            const res = await fetch("http://localhost:3000/log-out", {
+            const res = await fetch("https://offline-and-online-fullstack-password.onrender.com/log-out", {
                 method: "GET",
                 credentials: "include",
             });

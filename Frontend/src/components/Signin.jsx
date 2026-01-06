@@ -24,7 +24,7 @@ function Signin() {
         e.preventDefault();
         if (formdata.password === confirmpass) {
             try {
-                const res = await fetch('http://localhost:3000/sign-in', {
+                const res = await fetch('https://offline-and-online-fullstack-password.onrender.com/sign-in', {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(formdata),

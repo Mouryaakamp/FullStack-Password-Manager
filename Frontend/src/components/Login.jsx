@@ -19,7 +19,7 @@ function Login() {
         e.preventDefault();
         console.log(logindata);
         try {
-            const res = await fetch('http://localhost:3000/login', {
+            const res = await fetch('https://offline-and-online-fullstack-password.onrender.com/login', {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(logindata),
