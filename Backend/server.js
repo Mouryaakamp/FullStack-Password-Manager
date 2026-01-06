@@ -14,7 +14,7 @@ app.set("trust proxy", 1);
 app.use(cookieParser());
 app.use(express.json());
 app.use(cors({
-  origin: process.env.FRONTEND_URL || "https://offline-and-online-fullstack-password.onrender.com",
+  origin: process.env.FRONTEND_URL || "https://online-and-offline-fullstack-password.onrender.com",
   credentials: true
 }));
 
