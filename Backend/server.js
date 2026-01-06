@@ -45,7 +45,8 @@ app.post("/sign-in", async (req, res) => {
     res.cookie("Token", token, {
       httpOnly: true,
       sameSite: "none",
-      secure: true
+      secure: true,
+      path: "/"
     });
 
     res.status(201).json({ message: "User created" });
@@ -74,7 +75,8 @@ app.post("/login", async (req, res) => {
     res.cookie("Token", token, {
       httpOnly: true,
       sameSite: "none",
-      secure: true
+      secure: true,
+      path: "/"
     });
 
     res.json({ message: "Login successful" });
