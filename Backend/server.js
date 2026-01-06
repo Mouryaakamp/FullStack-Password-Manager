@@ -44,7 +44,8 @@ app.post("/sign-in", async (req, res) => {
 
     res.cookie("Token", token, {
       httpOnly: true,
-      sameSite: "lax",
+      sameSite: "none",
+      secure: true
     });
 
     res.status(201).json({ message: "User created" });
@@ -72,7 +73,8 @@ app.post("/login", async (req, res) => {
 
     res.cookie("Token", token, {
       httpOnly: true,
-      sameSite: "lax",
+      sameSite: "none",
+      secure: true
     });
 
     res.json({ message: "Login successful" });
