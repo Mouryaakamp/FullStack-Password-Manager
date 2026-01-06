@@ -14,7 +14,7 @@ app.set("trust proxy", 1);
 app.use(cookieParser());
 app.use(express.json());
 app.use(cors({
-  origin: "https://online-and-offline-fullstack-password.onrender.com",
+  origin: process.env.FRONTEND_URL || "https://offline-and-online-fullstack-password.onrender.com",
   credentials: true
 }));
 
@@ -89,7 +89,12 @@ app.post("/login", async (req, res) => {
 
 
 app.get("/log-out", (req, res) => {
-  res.clearCookie("Token");
+  res.clearCookie("Token", {
+    httpOnly: true,
+    sameSite: "none",
+    secure: true,
+    path: "/"
+  });
   res.json({ message: "Logged out" });
 
 });
